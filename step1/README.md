@@ -1,0 +1,89 @@
+# Agent Orchestration Lab (Step-by-step)
+
+`step1`은 이미 완성본 구조를 포함하고 있고, 추가로 `src/study`에 학습용 단계 실행 코드를 넣어두었습니다.
+
+## 0) 설치/준비
+
+```bash
+cd step1
+npm install
+cp .env.example .env
+```
+
+기본 LLM 엔드포인트는 `OPENAI_BASE_URL=http://localhost:8000/v1`, 기본 모델은 `OPENAI_MODEL=gpt-5.3-codex` 입니다.
+로컬 OpenAI 호환 서버를 쓰는 경우 `OPENAI_API_KEY=local-dev-key` 같은 임의 키로 실행 가능합니다.
+
+## 1) 바닥부터 단계별 학습
+
+### Step 1: Dev Agent만 보기
+
+```bash
+npm run study:1
+```
+
+학습 포인트:
+- 에이전트가 파일 변경안(`changes`)을 어떻게 만드는지
+- 변경 전/후를 어떻게 비교하는지
+
+### Step 2: Dev + Test Agent 연결
+
+```bash
+npm run study:2
+```
+
+학습 포인트:
+- dev 결과를 test 에이전트가 요약/판단으로 바꾸는 흐름
+- 실패 로그를 다음 수정 근거로 쓰는 구조
+
+### Step 3: Supervisor 재시도 루프
+
+```bash
+npm run study:3
+```
+
+학습 포인트:
+- `attempt` 루프
+- 실패 feedback을 dev 에이전트로 되돌리는 패턴
+- `supervisor/dev/test` 역할 분리
+
+### Step 4: 실제 서비스 결합
+
+```bash
+npm run study:4
+```
+
+학습 포인트:
+- `WorkspaceService`로 실제 파일 쓰기
+- `CommandRunner`로 실제 테스트 명령 실행
+- `Supervisor`가 이벤트/상태를 관리하는 전체 사이클
+
+## 2) 완성본 실행
+
+### Web UI 서버
+
+```bash
+npm run dev
+```
+
+브라우저에서 `http://localhost:${PORT}` 접속 후 세션 생성 (`.env` 기본값 예: `3001`).
+
+대시보드에서 바로 가능한 테스트:
+- App health 점검 (`GET /api/health`)
+- LLM 연결 ping (`POST /api/tools/llm/ping`)
+- 로컬 테스트 명령 실행 (`POST /api/tools/command`)
+
+### CLI
+
+```bash
+npm run cli -- --task "함수 버그 수정" --files "src/utils/json.ts" --test "npm test" --max-attempts 3
+```
+
+## 3) 코드 맵
+
+- `src/agents/devAgent.ts`: 코드 변경 생성
+- `src/agents/testAgent.ts`: 테스트 출력 요약/진단
+- `src/orchestrator/supervisor.ts`: 루프 제어, 이벤트/상태 관리
+- `src/services/workspace.ts`: 파일 읽기/쓰기
+- `src/services/commandRunner.ts`: 테스트 명령 실행
+- `src/services/sessionStore.ts`: 세션/이벤트 저장
+- `src/study/*`: 학습용 단계 실행 코드

@@ -1,0 +1,14 @@
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency folders (if created at root in the future)
+node_modules/
