@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+coverage/
+*.tsbuildinfo
+
+# Runtime / local temp
+tmp/
+tmp_*.txt
+*.log
+
+# Local environment
+.env
+.env.local
+.env.*.local

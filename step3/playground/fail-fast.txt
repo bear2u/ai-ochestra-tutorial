@@ -1,0 +1,1 @@
+maxAttempts=1 fail-fast smoke
