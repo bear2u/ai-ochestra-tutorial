@@ -26,7 +26,7 @@
 
 ---
 
-## Step2 (`step1` -> `step2`)
+## Step2
 목표:
 - phase 엔진 뼈대 도입 (`planning`~`packaging`)
 
@@ -49,7 +49,7 @@
 
 ---
 
-## Step3 (`step2` -> `step3`)
+## Step3
 목표:
 - planning/architecture/design을 실제 에이전트 실행으로 전환
 - artifact 생성/검증/저장/전달
@@ -84,7 +84,7 @@
 
 ---
 
-## Step4 (`step3` -> `step4`)
+## Step4
 목표:
 - 개발/검증 루프 고도화
 
@@ -110,7 +110,7 @@
 
 ---
 
-## Step5 (`step4` -> `step5`)
+## Step5
 목표:
 - 리뷰 에이전트 + 자율 재작업 루프
 
@@ -130,7 +130,7 @@
 
 ---
 
-## Step6 (`step5` -> `step6`)
+## Step6
 목표:
 - PR 후보 패키지 산출
 
@@ -152,7 +152,7 @@
 
 ---
 
-## Step7 (`step6` -> `step7`)
+## Step7
 목표:
 - 안정성/관측성 강화
 
@@ -170,7 +170,7 @@
 
 ---
 
-## Step8 (`step7` -> `step8`)
+## Step8
 목표:
 - 운영 하드닝
 
