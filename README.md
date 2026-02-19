@@ -132,23 +132,31 @@
 
 ## Step6
 목표:
-- PR 후보 패키지 산출
+- PR 후보 패키지 산출 + Supervisor advisory(보조) 도입
 
 핵심 구현:
-1. `PackagerAgent` 추가
-2. `PrPackageArtifact` 생성
+1. `SupervisorAdvisorAgent` 추가
+- advisory 이벤트/피드백 병합
+- `autonomous` 토글(`true` 기본)
+2. `PackagerAgent` 추가
+3. `PrPackageArtifact` 생성
 - `title`, `body`, `changedFiles`, `testSummary`, `reviewSummary`, `riskNotes`
-3. API 추가
+- `advisorNotes`, `outputPath`
+4. 구현 명령 액션
+- `DevAgent`가 제안한 `commands[]`를 implementation 단계에서 실행
+- 안전 정책으로 단순 `pnpm`/`npm` 명령만 허용
+5. API 추가
 - `GET /api/sessions/:id/artifacts`
 - `GET /api/sessions/:id/pr-package`
-4. CLI 확장
+6. CLI 확장
 - `--topic`, `--files`, `--autonomous`
-5. 파일 출력
+7. 파일 출력
 - `.orchestra/sessions/<sessionId>/pr-package.json`
 
 완료 기준:
 1. topic 입력 1건으로 PR 패키지 생성
-2. phase 타임라인과 최종 패키지 연결 가능
+2. advisory는 보조로만 동작하고 phase 전이 규칙은 유지
+3. phase 타임라인과 최종 패키지 연결 가능
 
 ---
 

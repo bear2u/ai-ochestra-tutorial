@@ -1,0 +1,60 @@
+patch-first apply/fallback smoke checklist
+
+scope
+- patch is the default path.
+- fallback runs only after patch failure and policy allow.
+- completion logs show final path and reason.
+
+preconditions
+- run from repository root.
+- smoke runner exists: scripts/smoke/apply-flow.sh
+- log sink is readable in terminal (stdout or logs/apply.log).
+
+scenarios and commands
+1) patch success (fallback not called)
+   command:
+   bash scripts/smoke/apply-flow.sh patch_success
+
+2) patch fail -> fallback success
+   command:
+   bash scripts/smoke/apply-flow.sh patch_fail_fallback_success
+
+3) patch fail -> fallback fail (final failure)
+   command:
+   bash scripts/smoke/apply-flow.sh patch_fail_fallback_fail
+
+expected decision logs
+- patch attempt always first:
+  event=patch.started
+- branch decision:
+  event=fallback.policy.evaluated allowed=true|false reasonCode=...
+- fallback call guard:
+  event=fallback.started appears only when state=PATCH_FAILED and allowed=true
+- completion summary (exactly one per request):
+  event=apply.completed finalPath=PATCH|FALLBACK|NONE outcome=SUCCEEDED|FAILED reasonCode=...
+
+expected by scenario
+- patch_success
+  - includes: patch.started, patch.succeeded, apply.completed finalPath=PATCH outcome=SUCCEEDED
+  - excludes: fallback.started, fallback.succeeded, fallback.failed
+
+- patch_fail_fallback_success
+  - includes: patch.started, patch.failed, fallback.policy.evaluated allowed=true,
+    fallback.started, fallback.succeeded, apply.completed finalPath=FALLBACK outcome=SUCCEEDED
+  - reasonCode should map from patch error type (EXCEPTION|TIMEOUT|VALIDATION_FAILED)
+
+- patch_fail_fallback_fail
+  - includes: patch.started, patch.failed, fallback.policy.evaluated allowed=true,
+    fallback.started, fallback.failed, apply.completed finalPath=NONE outcome=FAILED
+  - final log contains failing stage and cause (reasonCode + error summary)
+
+quick verification commands
+- show summary lines:
+  grep "event=apply.completed" logs/apply.log
+- verify no fallback on patch success request:
+  grep "<requestId>" logs/apply.log | grep "event=fallback.started"
+  # expected: no output
+- inspect branch decisions:
+  grep "event=fallback.policy.evaluated" logs/apply.log
+- inspect final path + reason code:
+  grep "event=apply.completed" logs/apply.log | sed -E 's/.*(traceId|requestId|finalPath|outcome|reasonCode)=([^ ]+).*/\0/'
