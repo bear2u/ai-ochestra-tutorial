@@ -162,19 +162,22 @@
 
 ## Step7
 목표:
-- 안정성/관측성 강화
+- 채팅 한 줄 기반 팀 오케스트레이션
 
 핵심 구현:
-1. 세션 영속화(파일 또는 SQLite)
-2. 재시작 복구 정책
-3. 메트릭 노출
-- phase latency, 실패 분류, 성공률
-4. timeout/cancel 제어
-5. 대시보드/CLI 진행률 표시 강화
+1. `TeamOrchestrator` 추가 (chat -> discovery -> task decomposition -> parallel workers)
+2. 자동 파일 탐색/대상 선정
+3. `TaskCard`/`HandoffEnvelope` 기반 협업 상태 모델
+4. 승인 큐 + `waiting_approval` 재개 흐름
+5. Step6 supervisor 루프(`validation/review/packaging`)로 후속 연결
+6. Step7 UI 패널 추가 (Chat, Task Board, Handoff, Discovery, Approval, Worker Logs)
+7. Step6 API 회귀 유지 + Step7 API 확장
 
 완료 기준:
-1. 서버 재시작 후 세션 조회/복구
-2. 장시간 세션 timeout/cancel 검증
+1. 채팅 메시지 한 건으로 run이 자동 시작
+2. 병렬 worker/task/handoff 상태를 API/UI에서 추적 가능
+3. 승인 대기/승인 후 재개 동작
+4. 성공 시 Step6와 동일하게 PR package 생성
 
 ---
 

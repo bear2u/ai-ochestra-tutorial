@@ -1,0 +1,1 @@
+node -e 'const fs=require("fs");const p=".step4_retry_counter";let n=0;try{n=Number(fs.readFileSync(p,"utf8"))||0;}catch{}n+=1;fs.writeFileSync(p,String(n));if(n<3){console.error("FAIL attempt "+n);process.exit(1);}console.log("PASS attempt "+n);try{fs.unlinkSync(p);}catch{}'

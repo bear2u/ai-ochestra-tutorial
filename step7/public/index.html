@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Orchestration Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero panel reveal">
+        <p class="eyebrow">Local QA Console</p>
+        <h1>Agent Orchestration Test Dashboard</h1>
+        <p class="subtitle">
+          Step7 기준 AI 에이전트 개발팀 실행 흐름을 운영 모드로 확인하고, 필요 시 디버그 패널을 확장합니다.
+        </p>
+      </header>
+
+      <section class="panel panel-wide reveal ui-mode-panel" aria-labelledby="ui-mode-title">
+        <div class="panel-head">
+          <h2 id="ui-mode-title">View Mode</h2>
+          <span id="ui-mode-meta" class="phase-meta">Team mode</span>
+        </div>
+        <div class="ui-mode-actions">
+          <button id="ui-mode-team" type="button" class="button">Team Mode (추천)</button>
+          <button id="ui-mode-debug" type="button" class="button ghost">Debug Mode</button>
+        </div>
+        <p class="field-hint">
+          Team Mode는 실전 운영에 필요한 패널만 표시합니다. Debug Mode는 Step6/Step7 상세 진단 패널을 모두 노출합니다.
+        </p>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="chat-title">
+        <div class="panel-head">
+          <h2 id="chat-title">Step7 Chat Orchestration</h2>
+          <span id="chat-meta" class="phase-meta">chat session not selected</span>
+        </div>
+        <div class="chat-controls">
+          <label for="chat-workspace-root">Chat Workspace Root</label>
+          <input id="chat-workspace-root" type="text" value="" placeholder="기본값: 서버 workspace 절대경로" />
+          <label class="checkbox-row" for="chat-autonomous">
+            <input id="chat-autonomous" type="checkbox" checked />
+            Autonomous (advisor enabled)
+          </label>
+          <label for="chat-approval-mode">Approval Mode</label>
+          <select id="chat-approval-mode">
+            <option value="manual">Manual approval</option>
+            <option value="auto_safe" selected>Auto-safe (low/medium 자동승인)</option>
+            <option value="auto_all">Auto-all (모든 approval 자동승인)</option>
+          </select>
+          <div class="chat-actions">
+            <button id="create-chat-session" type="button" class="button">Create Chat Session</button>
+            <button id="refresh-chat-session" type="button" class="button ghost">Reload Chat</button>
+          </div>
+        </div>
+
+        <div id="chat-messages" class="console chat-messages" role="log" aria-live="polite"></div>
+
+        <form id="chat-message-form" class="chat-message-form">
+          <label for="chat-message-input">Instruction</label>
+          <textarea
+            id="chat-message-input"
+            required
+            placeholder="예: example 폴더에 React 기본 세팅해줘 (또는 NextJs + shadcn 설치)"
+          ></textarea>
+          <button id="send-chat-message" type="submit" class="button">Send & Run</button>
+        </form>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="approval-title">
+        <h2 id="approval-title">Approval Queue</h2>
+        <div id="approval-panel" class="approval-panel" role="list"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="command-center-title">
+        <div class="panel-head">
+          <h2 id="command-center-title">Team Command Center</h2>
+          <span id="command-center-meta" class="phase-meta">No run selected.</span>
+        </div>
+        <div id="command-center" class="command-center-grid" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="validation-guidance-title">
+        <h2 id="validation-guidance-title">Validation Guidance (원문)</h2>
+        <div id="validation-guidance" class="console validation-guidance" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel reveal panel-third panel-advanced" aria-labelledby="diag-title">
+        <div class="panel-head">
+          <h2 id="diag-title">Diagnostics</h2>
+          <button id="refresh-overview" type="button" class="button ghost">Refresh</button>
+        </div>
+
+        <div class="diag-grid">
+          <button id="ping-health" type="button" class="button">App Health</button>
+          <button id="ping-llm" type="button" class="button">LLM Ping</button>
+        </div>
+
+        <label for="ping-prompt" class="field-label">LLM Prompt</label>
+        <input
+          id="ping-prompt"
+          type="text"
+          value="Respond with one short line: ping accepted"
+          autocomplete="off"
+        />
+
+        <label for="tool-command" class="field-label">Test Command</label>
+        <div class="command-row">
+          <input id="tool-command" type="text" value="pnpm test" autocomplete="off" />
+          <button id="run-command" type="button" class="button">Run</button>
+        </div>
+
+        <pre id="diagnostics-output" class="console" aria-live="polite">No diagnostics yet.</pre>
+      </section>
+
+      <section class="panel reveal panel-third panel-advanced" aria-labelledby="run-title">
+        <h2 id="run-title">Step6 Session Runner</h2>
+        <form id="session-form" class="form-grid">
+          <label for="session-preset">Session presets (12)</label>
+          <select id="session-preset" aria-describedby="session-preset-help">
+            <option value="">시나리오를 선택하세요</option>
+          </select>
+          <p id="session-preset-help" class="preset-help">
+            선택 시 Topic, File paths, Validation/Test command, Autonomous, 예산 설정이 자동 입력됩니다.
+          </p>
+          <div id="session-preset-preview" class="preset-preview" role="status" aria-live="polite">
+            시나리오를 선택하면 Step6 체크포인트를 미리 보여줍니다.
+          </div>
+
+          <label for="topic">Topic</label>
+          <textarea id="topic" required placeholder="예: step6 PR package with advisory"></textarea>
+
+          <label for="workspaceRoot">Workspace Root</label>
+          <input id="workspaceRoot" value="" placeholder="기본값: 서버 workspace 절대경로" />
+
+          <label for="task">Legacy task (optional)</label>
+          <input id="task" placeholder="(optional) topic과 동일값으로 처리됩니다" />
+
+          <label for="files">File paths (comma-separated)</label>
+          <input id="files" required placeholder="src/utils/json.ts,tests/json.test.ts" />
+
+          <label for="test">Test command</label>
+          <input id="test" value="pnpm test" />
+
+          <label for="validationCommands">Validation commands (optional)</label>
+          <textarea
+            id="validationCommands"
+            placeholder="pnpm lint&#10;pnpm typecheck&#10;pnpm test"
+          ></textarea>
+          <p class="field-hint">
+            여러 명령은 줄바꿈으로 구분하세요. 비워두면 기본 파이프라인(`pnpm lint -> pnpm typecheck -> testCommand`)을 사용합니다.
+          </p>
+
+          <label class="checkbox-row" for="autonomous">
+            <input id="autonomous" type="checkbox" checked />
+            Autonomous (advisor enabled)
+          </label>
+
+          <label for="maxIterations">Max iterations</label>
+          <input id="maxIterations" type="number" min="1" max="20" value="6" />
+
+          <label for="maxMinutes">Max minutes</label>
+          <input id="maxMinutes" type="number" min="1" max="180" value="45" />
+
+          <button id="start-session" type="submit" class="button wide">Start Session</button>
+        </form>
+      </section>
+
+      <section class="panel reveal panel-third panel-advanced" aria-labelledby="list-title">
+        <div class="panel-head">
+          <h2 id="list-title">Recent Sessions</h2>
+          <button id="refresh-sessions" type="button" class="button ghost">Reload</button>
+        </div>
+        <div id="sessions-list" class="sessions-list" role="list"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="status-title">
+        <h2 id="status-title">Session Status</h2>
+        <pre id="status" class="console status">No session selected.</pre>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="phase-title">
+        <div class="panel-head">
+          <h2 id="phase-title">Supervisor Loop Phase Tracker</h2>
+          <span id="phase-meta" class="phase-meta">No session selected.</span>
+        </div>
+        <div id="phase-tracker" class="phase-tracker" role="list"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="goal-validation-summary-title">
+        <h2 id="goal-validation-summary-title">Goal Validation Summary</h2>
+        <div id="goal-validation-summary" class="console validation-summary" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="validation-summary-title">
+        <h2 id="validation-summary-title">Validation Phase Summary</h2>
+        <div id="validation-summary" class="console validation-summary" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="review-summary-title">
+        <h2 id="review-summary-title">Review Summary</h2>
+        <div id="review-summary" class="console review-summary" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="pr-package-summary-title">
+        <div class="panel-head">
+          <h2 id="pr-package-summary-title">PR Package Summary</h2>
+          <button id="refresh-pr-package" type="button" class="button ghost">Reload</button>
+        </div>
+        <div id="pr-package-summary" class="console review-summary" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="budget-status-title">
+        <h2 id="budget-status-title">Budget Status</h2>
+        <div id="budget-status" class="console budget-status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="prompts-title">
+        <h2 id="prompts-title">Agent Prompt Logs</h2>
+        <div id="prompt-logs" class="console prompt-logs" role="log" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="task-board-title">
+        <h2 id="task-board-title">Team Task Board (Preparation Stage)</h2>
+        <div id="task-board" class="task-board" role="list"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="decomposition-title">
+        <div class="panel-head">
+          <h2 id="decomposition-title">Task Decomposition Log</h2>
+          <span id="decomposition-meta" class="phase-meta">No run selected.</span>
+        </div>
+        <div id="decomposition-log" class="console decomposition-log" role="log" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="parallel-worker-title">
+        <div class="panel-head">
+          <h2 id="parallel-worker-title">Parallel Worker Monitor</h2>
+          <span id="parallel-meta" class="phase-meta">No run selected.</span>
+        </div>
+        <div id="parallel-monitor" class="parallel-grid" role="list"></div>
+        <div id="parallel-timeline" class="console parallel-timeline" role="log" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="handoffs-title">
+        <h2 id="handoffs-title">Handoffs</h2>
+        <div id="handoffs-panel" class="console review-summary" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="discovery-title">
+        <h2 id="discovery-title">Discovery</h2>
+        <div id="discovery-panel" class="console review-summary" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal" aria-labelledby="worker-log-title">
+        <h2 id="worker-log-title">Worker Logs</h2>
+        <div id="worker-log" class="console worker-log" role="log" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="supervisor-monitor-title">
+        <div class="panel-head">
+          <h2 id="supervisor-monitor-title">Supervisor Monitor</h2>
+          <span id="supervisor-meta" class="phase-meta">No session selected.</span>
+        </div>
+        <div class="supervisor-toolbar">
+          <label class="filter-chip supervisor-option">
+            <input id="supervisor-include-advisor" type="checkbox" checked />
+            Include advisor events
+          </label>
+        </div>
+        <div id="supervisor-log" class="console supervisor-log" role="log" aria-live="polite"></div>
+      </section>
+
+      <section class="panel panel-wide reveal panel-advanced" aria-labelledby="events-title">
+        <h2 id="events-title">Live Event Stream</h2>
+        <div class="events-toolbar" role="group" aria-label="Event role filter">
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="supervisor" checked />
+            Supervisor
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="dev" checked />
+            Dev
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="test" checked />
+            Test
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="validator" checked />
+            Validator
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="planner" checked />
+            Planner
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="architect" checked />
+            Architect
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="designer" checked />
+            Designer
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="reviewer" checked />
+            Reviewer
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="advisor" checked />
+            Advisor
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="packager" checked />
+            Packager
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="coordinator" checked />
+            Coordinator
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="worker" checked />
+            Worker
+          </label>
+          <label class="filter-chip">
+            <input type="checkbox" data-role-filter value="discoverer" checked />
+            Discoverer
+          </label>
+        </div>
+        <div id="events" class="console events" role="log" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
